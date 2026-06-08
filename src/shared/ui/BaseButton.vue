@@ -7,7 +7,7 @@ defineProps<{
 <template>
   <button
     :type="type ?? 'button'"
-    class="bg-[#01978E] text-white font-bold py-3 w-full hover:bg-[#017d75] transition-colors"
+    class="bg-[#01978E] text-white font-bold py-1 w-full hover:bg-[#017d75] transition-colors"
   >
     <slot />
   </button>
