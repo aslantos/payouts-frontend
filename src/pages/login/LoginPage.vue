@@ -10,6 +10,7 @@ import AppleIcon from '@/shared/ui/icons/AppleIcon.vue'
 const fullName = ref('')
 const email = ref('')
 const password = ref('')
+const isLogin = ref(false)
 </script>
 
 <template>
@@ -21,22 +22,33 @@ const password = ref('')
     <div class="relative w-[1000px] max-w-[95%] h-[700px] max-h-[90vh] bg-white rounded-[30px] shadow-xl">
 
       <!-- Бирюзовая панель-->
-      <div class="absolute top-0 left-0 h-full w-[43%] bg-[#01978E] rounded-[30px] flex flex-col items-center justify-center text-center px-10 gap-4">
-        <h2 class="text-3xl font-bold text-white font-['Nunito']">Already Signed up?</h2>
+      <div
+          class="absolute top-0 left-0 h-full w-[43%] bg-[#01978E] rounded-[30px] flex flex-col items-center justify-center text-center px-10 gap-4 transition-transform duration-500 ease-in-out"
+          :class="isLogin ? 'translate-x-[133%]' : 'translate-x-0'"
+        >
+        <h2 class="text-3xl font-bold text-white font-['Nunito']">
+          {{ isLogin ? 'New here?' : 'Already Signed up?' }}
+        </h2>
         <p class="text-sm text-white">
-          Log in to your account so you can continue building and editing your onboarding flows
+          {{ isLogin
+              ? 'Let’s get you all set up so you can start creating your first onboarding experience'
+              : 'Log in to your account so you can continue building and editing your onboarding flows' }}
         </p>
         <button
           type="button"
+          @click="isLogin = !isLogin"
           class="text-lg text-white font-['Nunito'] mt-2 px-12.5 py-1 border-2 border-white font-bold rounded-md hover:bg-white/10 transition-colors"
         >
-          LOG IN
+          {{ isLogin ? 'SIGN UP' : 'LOG IN' }}
         </button>
       </div>
 
       <!-- Область формы: справа -->
-      <div class="absolute top-0 right-0 h-full w-[57%] flex items-center justify-center">
-        <div class="w-[75%] flex flex-col gap-5">
+      <div
+          class="absolute top-0 h-full w-[57%] flex items-center justify-center transition-all duration-500 ease-in-out"
+          :class="isLogin ? 'left-0' : 'left-[43%]'"
+        >
+        <div v-if="!isLogin" class="w-[75%] flex flex-col gap-5">
 
           <h1 class="text-3xl font-bold text-center text-black">Sign Up</h1>
 
@@ -70,6 +82,11 @@ const password = ref('')
           </div>
 
 
+        </div>
+
+        <div v-else class="w-[75%] flex flex-col gap-5 text-center">
+          <h1 class="text-3xl font-bold">Log In</h1>
+          <p class="text-gray-400">Форму входа сверстаю завтра</p>
         </div>
       </div>
 
