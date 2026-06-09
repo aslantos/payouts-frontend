@@ -84,9 +84,46 @@ const isLogin = ref(false)
 
         </div>
 
-        <div v-else class="w-[75%] flex flex-col gap-5 text-center">
-          <h1 class="text-3xl font-bold">Log In</h1>
-          <p class="text-gray-400">Форму входа сверстаю завтра</p>
+        <div v-else class="w-[75%] flex flex-col gap-5">
+          <h1 class="text-3xl font-extrabold text-center text-extrabold">Log In</h1>
+
+          <BaseInput label="Email" placeholder="Enter your email address" v-model="email" />
+          <BaseInput label="Password" placeholder="Enter your password" type="password" v-model="password" />
+
+          <div class="flex justify-between">
+            <label class="flex gap-1 cursor-pointer accent-[#01978E]">
+              <input type="checkbox">
+              <span>Remember Me</span>
+            </label>
+            <a href="#" class="text-[#01978E]">Forgot Password?</a>
+          </div>
+
+          <BaseButton class="mt-2 flex items-center justify-center gap-4">
+            <span class="text-2xl">Log In</span>
+            <svg viewBox="0 0 29 23" fill="none" class="w-6 h-5" xmlns="http://www.w3.org/2000/svg">
+              <path d="M28.2684 12.1066C28.8542 11.5208 28.8542 10.5711 28.2684 9.9853L18.7225 0.439358C18.1367 -0.146429 17.187 -0.146429 16.6012 0.439358C16.0154 1.02514 16.0154 1.97489 16.6012 2.56068L25.0865 11.046L16.6012 19.5312C16.0154 20.117 16.0154 21.0668 16.6012 21.6526C17.187 22.2383 18.1367 22.2383 18.7225 21.6526L28.2684 12.1066ZM0 11.046V12.546H27.2078V11.046V9.54596H0V11.046Z" fill="currentColor"/>
+            </svg>
+          </BaseButton>
+
+          <div class="flex items-center gap-3">
+            <span class="flex-1 h-0.5 bg-black"></span>
+            <span class="text-lg font-bold text-black">OR</span>
+            <span class="flex-1 h-0.5 bg-black"></span>
+          </div>
+          
+          <div class="flex items-center justify-center gap-10">
+            <button type="button" class="w-11 h-11 border-3 border-[#A3A3A3] rounded-lg flex items-center justify-center">
+              <GoogleIcon/>
+            </button>
+            <button type="button" class="w-11 h-11 border-3 border-[#A3A3A3] rounded-lg flex items-center justify-center">
+              <LinkedinIcon/>
+            </button>
+            <button type="button" class="w-11 h-11 border-3 border-[#A3A3A3] rounded-lg flex items-center justify-center">
+              <AppleIcon/>
+            </button>
+          </div>
+
+
         </div>
       </div>
 
