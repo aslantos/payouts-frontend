@@ -50,7 +50,7 @@ const isLogin = ref(false)
         >
         <div v-if="!isLogin" class="w-[75%] flex flex-col gap-5">
 
-          <h1 class="text-3xl font-bold text-center text-black">Sign Up</h1>
+          <h1 class="text-[40px] font-bold text-center">Sign Up</h1>
 
           <BaseInput label="Full Name" placeholder="Enter your full name" v-model="fullName" />
           <BaseInput label="Email" placeholder="Enter your email address" v-model="email" />
@@ -83,9 +83,9 @@ const isLogin = ref(false)
 
 
         </div>
-
+        <!-- if: Log In -->
         <div v-else class="w-[75%] flex flex-col gap-5">
-          <h1 class="text-3xl font-extrabold text-center text-extrabold">Log In</h1>
+          <h1 class="text-[40px] font-black text-center">Log In</h1>
 
           <BaseInput label="Email" placeholder="Enter your email address" v-model="email" />
           <BaseInput label="Password" placeholder="Enter your password" type="password" v-model="password" />
