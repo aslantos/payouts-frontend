@@ -2,7 +2,7 @@
 </script>
 
 <template>
-  <div class="p-8 text-2xl font-bold">
+  <div class="p-8 text-2xl font-bolds">
     Дашборд (/dashboard)
   </div>
 </template>
