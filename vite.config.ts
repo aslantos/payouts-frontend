@@ -11,4 +11,13 @@ export default defineConfig({
       '@': fileURLToPath(new URL('./src', import.meta.url)),
     },
   },
+  server: {
+    proxy: {
+      '/api': {
+        target: 'https://happy-forgiveness-production-caca.up.railway.app',
+        changeOrigin: true,
+        secure: true,
+      },  
+    },
+  },
 })

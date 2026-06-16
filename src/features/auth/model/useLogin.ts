@@ -3,11 +3,13 @@ import { http } from '@/shared/api/http'
 import { useAuthStore } from '@/features/auth/model/authStore'
 
 type LoginResponse = {
-  access_token: string
+  access_token?: string
+  access?: string
+  token?: string
 }
 
 type LoginPayload = {
-  email: string
+  username: string
   password: string
 }
 
@@ -16,11 +18,15 @@ export function useLogin() {
 
   return useMutation({
     mutationFn: async (payload: LoginPayload) => {
-      const response = await http.post<LoginResponse>('/auth/login', payload)
-      return response.data
+      const response = await http.post<LoginResponse>('/auth/login/', payload)
+      const token = response.data.access_token ?? response.data.access ?? response.data.token
+      if (!token) {
+        throw new Error('Сервер не вернул токен')
+      }
+      return token
     },
-    onSuccess: (data) => {
-      authStore.setToken(data.access_token)
+    onSuccess: (token) => {
+      authStore.setToken(token)
     },
   })
 }

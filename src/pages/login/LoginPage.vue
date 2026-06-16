@@ -1,7 +1,9 @@
 <script setup lang="ts">
-import { ref } from 'vue'
+import { ref, computed } from 'vue'
 import { useRouter } from 'vue-router'
+import type { AxiosError } from 'axios'
 import { useLogin } from '@/features/auth/model/useLogin'
+import { useRegisterContractor } from '@/features/auth/model/useRegisterContractor'
 import bgImage from '@/shared/assets/auth-bg.webp'
 import BaseInput from '@/shared/ui/BaseInput.vue'
 import BaseButton from '@/shared/ui/BaseButton.vue'
@@ -9,19 +11,56 @@ import GoogleIcon from '@/shared/ui/icons/GoogleIcon.vue'
 import LinkedinIcon from '@/shared/ui/icons/LinkedinIcon.vue'
 import AppleIcon from '@/shared/ui/icons/AppleIcon.vue'
 
-const fullName = ref('')
+// Sign Up form
+const signupUsername = ref('')
 const email = ref('')
+const signupPassword = ref('')
+const isSelfEmployed = ref(false)
+const registrationSuccess = ref(false)
+
+// Log In form
+const username = ref('')
 const password = ref('')
+
 const isLogin = ref(false)
 const router = useRouter()
+
 const loginMutation = useLogin()
+const registerMutation = useRegisterContractor()
+
+const registerErrorText = computed(() => {
+  if (!registerMutation.isError.value) return ''
+  const status = (registerMutation.error.value as AxiosError)?.response?.status
+  if (status === 400) return 'Пользователь с такими данными уже существует'
+  if (status === 422) return 'Проверьте правильность введённых данных'
+  return 'Что-то пошло не так, попробуйте позже'
+})
 
 function handleLogin() {
   loginMutation.mutate(
-    { email: email.value, password: password.value },
+    { username: username.value, password: password.value },
     {
       onSuccess: () => {
         router.push('/dashboard')
+      },
+    }
+  )
+}
+
+function handleRegister() {
+  registerMutation.mutate(
+    {
+      username: signupUsername.value,
+      email: email.value,
+      password: signupPassword.value,
+      is_self_employed: isSelfEmployed.value,
+    },
+    {
+      onSuccess: () => {
+        registrationSuccess.value = true
+        setTimeout(() => {
+          isLogin.value = true
+        }, 1500)
       },
     }
   )
@@ -39,7 +78,7 @@ function handleLogin() {
 
       <!-- Бирюзовая панель-->
       <div
-          class="absolute top-0 left-0 h-full w-[43%] bg-[#01978E] rounded-[30px] flex flex-col items-center justify-center text-center px-10 gap-4 transition-transform duration-500 ease-in-out"
+          class="absolute top-0 left-0 h-full w-[43%] bg-[#01978E] rounded-[30px] z-10 flex flex-col items-center justify-center text-center px-10 gap-4 transition-transform duration-500 ease-in-out"
           :class="isLogin ? 'translate-x-[133%]' : 'translate-x-0'"
         >
         <h2 class="text-3xl font-bold text-white font-['Nunito']">
@@ -68,16 +107,29 @@ function handleLogin() {
 
           <h1 class="text-[40px] font-bold text-center">Sign Up</h1>
 
-          <BaseInput label="Full Name" placeholder="Enter your full name" v-model="fullName" />
+          <BaseInput label="Username" placeholder="Enter your username" v-model="signupUsername" />
           <BaseInput label="Email" placeholder="Enter your email address" v-model="email" />
-          <BaseInput label="Password" placeholder="Enter your password" type="password" v-model="password" />
+          <BaseInput label="Password" placeholder="Enter your password" type="password" v-model="signupPassword" />
 
-          <BaseButton class="mt-2 flex items-center justify-center gap-4">
-            <span class="text-2xl">Sign up</span>
-            <svg viewBox="0 0 29 23" fill="none" class="w-6 h-5" xmlns="http://www.w3.org/2000/svg">
+          <label class="flex items-center gap-2 cursor-pointer">
+            <input type="checkbox" v-model="isSelfEmployed" class="w-4 h-4 accent-[#01978E]" />
+            <span class="text-sm">I am self-employed</span>
+          </label>
+
+          <BaseButton
+            class="mt-2 flex items-center justify-center gap-4"
+            :disabled="registerMutation.isPending.value"
+            @click="handleRegister"
+          >
+            <span class="text-2xl">{{ registerMutation.isPending.value ? 'Регистрируем...' : 'Sign up' }}</span>
+            <svg v-if="!registerMutation.isPending.value" viewBox="0 0 29 23" fill="none" class="w-6 h-5" xmlns="http://www.w3.org/2000/svg">
               <path d="M28.2684 12.1066C28.8542 11.5208 28.8542 10.5711 28.2684 9.9853L18.7225 0.439358C18.1367 -0.146429 17.187 -0.146429 16.6012 0.439358C16.0154 1.02514 16.0154 1.97489 16.6012 2.56068L25.0865 11.046L16.6012 19.5312C16.0154 20.117 16.0154 21.0668 16.6012 21.6526C17.187 22.2383 18.1367 22.2383 18.7225 21.6526L28.2684 12.1066ZM0 11.046V12.546H27.2078V11.046V9.54596H0V11.046Z" fill="currentColor"/>
             </svg>
           </BaseButton>
+
+          <p v-if="registerMutation.isError.value" class="text-sm text-red-500 text-center">
+            {{ registerErrorText }}
+          </p>
 
           <div class="flex items-center gap-3">
             <span class="flex-1 h-0.5 bg-black"></span>
@@ -97,13 +149,23 @@ function handleLogin() {
             </button>
           </div>
 
+          <p class="text-center text-sm text-gray-500">
+            Registering a company?
+            <router-link to="/register-company" class="text-[#01978E] font-semibold hover:underline">
+              Register here
+            </router-link>
+          </p>
 
         </div>
         <!-- if: Log In -->
         <div v-else class="w-[75%] flex flex-col gap-5">
           <h1 class="text-[40px] font-black text-center">Log In</h1>
 
-          <BaseInput label="Email" placeholder="Enter your email address" v-model="email" />
+          <p v-if="registrationSuccess" class="text-sm text-green-600 text-center bg-green-50 rounded-lg p-3">
+            Аккаунт успешно создан! Войдите в систему.
+          </p>
+
+          <BaseInput label="Username" placeholder="Enter your username" v-model="username" />
           <BaseInput label="Password" placeholder="Enter your password" type="password" v-model="password" />
 
           <div class="flex justify-between">
@@ -114,16 +176,19 @@ function handleLogin() {
             <a href="#" class="text-[#01978E]">Forgot Password?</a>
           </div>
 
-          <BaseButton class="mt-2 flex items-center justify-center gap-4" @click="handleLogin">
-            <span class="text-2xl">Log In</span>
-            <svg viewBox="0 0 29 23" fill="none" class="w-6 h-5" xmlns="http://www.w3.org/2000/svg">
+          <BaseButton
+            class="mt-2 flex items-center justify-center gap-4"
+            :disabled="loginMutation.isPending.value"
+            @click="handleLogin"
+          >
+            <span class="text-2xl">{{ loginMutation.isPending.value ? 'Logging in...' : 'Log In' }}</span>
+            <svg v-if="!loginMutation.isPending.value" viewBox="0 0 29 23" fill="none" class="w-6 h-5" xmlns="http://www.w3.org/2000/svg">
               <path d="M28.2684 12.1066C28.8542 11.5208 28.8542 10.5711 28.2684 9.9853L18.7225 0.439358C18.1367 -0.146429 17.187 -0.146429 16.6012 0.439358C16.0154 1.02514 16.0154 1.97489 16.6012 2.56068L25.0865 11.046L16.6012 19.5312C16.0154 20.117 16.0154 21.0668 16.6012 21.6526C17.187 22.2383 18.1367 22.2383 18.7225 21.6526L28.2684 12.1066ZM0 11.046V12.546H27.2078V11.046V9.54596H0V11.046Z" fill="currentColor"/>
             </svg>
           </BaseButton>
 
-          <!--потом поменять-->
           <p v-if="loginMutation.isError.value" class="text-sm text-red-500 text-center">
-            дурыс емес бляйт
+            Неверный логин или пароль
           </p>
 
           <div class="flex items-center gap-3">
