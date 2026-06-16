@@ -11,7 +11,7 @@ import WorkLogNewPage from '@/pages/work-log-new/WorkLogNewPage.vue'
 import WorkLogsPage from '@/pages/work-logs/WorkLogsPage.vue'
 import WorkTypesPage from '@/pages/work-types/WorkTypesPage.vue'
 import HomePage from '@/pages/home/HomePage.vue'
-import { Component } from 'lucide-vue-next'
+
 
 const routes = [
   { path: '/login', component: LoginPage },
