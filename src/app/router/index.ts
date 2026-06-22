@@ -1,30 +1,38 @@
 import { createRouter, createWebHistory } from 'vue-router'
 import { useAuthStore } from '@/features/auth/model/authStore'
+import AppLayout from '@/shared/ui/AppLayout.vue'
 import LoginPage from '@/pages/login/LoginPage.vue'
 import RegisterCompanyPage from '@/pages/register-company/RegisterCompanyPage.vue'
+import HomePage from '@/pages/home/HomePage.vue'
 import DashboardPage from '@/pages/dashboard/DashboardPage.vue'
-import PayoutDetailPage from '@/pages/payout-detail/PayoutDetailPage.vue'
+import PeoplePage from '@/pages/people/PeoplePage.vue'
+import WorksPage from '@/pages/works/WorksPage.vue'
+import ContractPage from '@/pages/contract/ContractPage.vue'
+import CompanyPage from '@/pages/company/CompanyPage.vue'
 import PayoutsPage from '@/pages/payouts/PayoutsPage.vue'
 import TariffsPage from '@/pages/tariffs/TariffsPage.vue'
-import UsersPage from '@/pages/users/UsersPage.vue'
-import WorkLogNewPage from '@/pages/work-log-new/WorkLogNewPage.vue'
-import WorkLogsPage from '@/pages/work-logs/WorkLogsPage.vue'
-import WorkTypesPage from '@/pages/work-types/WorkTypesPage.vue'
-import HomePage from '@/pages/home/HomePage.vue'
-
 
 const routes = [
+  // Публичные — без навбара
   { path: '/login', component: LoginPage },
   { path: '/register-company', component: RegisterCompanyPage },
-  { path: '/dashboard', component: DashboardPage, meta: { requiresAuth: true } },
-  { path: '/payouts/:id', component: PayoutDetailPage, meta: { requiresAuth: true } },
-  { path: '/payouts', component: PayoutsPage, meta: { requiresAuth: true } },
-  { path: '/tariffs', component: TariffsPage, meta: { requiresAuth: true } },
-  { path: '/users', component: UsersPage, meta: { requiresAuth: true } },
-  { path: '/work-logs', component: WorkLogsPage, meta: { requiresAuth: true } },
-  { path: '/work-logs/new', component: WorkLogNewPage, meta: { requiresAuth: true } },
-  { path: '/work-types', component: WorkTypesPage, meta: { requiresAuth: true } },
-  {path: '/', component: HomePage}
+  { path: '/', component: HomePage },
+
+  // Приватные — внутри AppLayout (дочерние маршруты)
+  {
+    path: '/',
+    component: AppLayout,
+    meta: { requiresAuth: true },
+    children: [
+      { path: 'dashboard', component: DashboardPage },
+      { path: 'people', component: PeoplePage },
+      { path: 'works', component: WorksPage },
+      { path: 'contract', component: ContractPage },
+      { path: 'company', component: CompanyPage },
+      { path: 'payouts', component: PayoutsPage },
+      { path: 'tariffs', component: TariffsPage },
+    ],
+  },
 ]
 
 export const router = createRouter({
