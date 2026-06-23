@@ -52,3 +52,24 @@ export type SubmissionResponse = {
   attachments: string[]
   createdAt: string
 }
+
+export type ContractStatus = 'DRAFT' | 'SENT' | 'SIGNED' | 'ACTIVE' | 'CLOSED' | 'CANCELLED'
+
+export type ContractResponse = {
+  id: number
+  contractNumber: string
+  contractorId: number
+  subject: string
+  amount: number | string
+  status: ContractStatus
+  signedAt: string | null
+  fileUrl: string | null
+  createdAt: string
+}
+
+export type ContractTemplateResponse = {
+  id: number
+  name: string
+  bodyTemplate: string
+  createdAt: string
+}

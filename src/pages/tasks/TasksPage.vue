@@ -27,7 +27,6 @@ const title = ref('')
 const description = ref('')
 const budget = ref('')
 const deadline = ref('')
-const assignedToId = ref('')
 
 function handleSubmit() {
   if (!title.value || !budget.value) return
@@ -38,7 +37,6 @@ function handleSubmit() {
     budget: Number(budget.value),
   }
   if (deadline.value) payload.deadline = deadline.value
-  if (assignedToId.value) payload.assignedToId = Number(assignedToId.value)
 
   createTask.mutate(payload as Parameters<typeof createTask.mutate>[0], {
     onSuccess: () => {
@@ -47,7 +45,6 @@ function handleSubmit() {
       description.value = ''
       budget.value = ''
       deadline.value = ''
-      assignedToId.value = ''
     },
   })
 }
@@ -179,13 +176,6 @@ function formatDeadline(dl: string | null): string {
           class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#01978E] focus:border-transparent"
         />
       </div>
-
-      <BaseInput
-        label="ID подрядчика (необязательно)"
-        placeholder="Оставьте пустым — задача в открытый пул"
-        type="number"
-        v-model="assignedToId"
-      />
 
       <p v-if="createTask.isError.value" class="text-sm text-red-500">
         Не удалось создать задачу. Проверьте данные.
