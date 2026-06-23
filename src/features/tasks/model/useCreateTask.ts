@@ -1,5 +1,6 @@
 import { useMutation, useQueryClient } from '@tanstack/vue-query'
 import { http } from '@/shared/api/http'
+import { useAppToast } from '@/shared/lib/toast'
 import type { TaskResponse } from '@/shared/types/api'
 
 type CreateTaskPayload = {
@@ -18,6 +19,7 @@ function toAlmatyISO(raw: string): string {
 
 export function useCreateTask() {
   const queryClient = useQueryClient()
+  const { success, handleError } = useAppToast()
 
   return useMutation({
     mutationFn: async (payload: CreateTaskPayload) => {
@@ -30,6 +32,8 @@ export function useCreateTask() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['tasks'] })
+      success('Задача успешно создана!')
     },
+    onError: handleError,
   })
 }

@@ -1,5 +1,7 @@
-import { useMutation } from '@tanstack/vue-query'
+import { useMutation, useQueryClient } from '@tanstack/vue-query'
 import { http } from '@/shared/api/http'
+import { useAppToast } from '@/shared/lib/toast'
+import type { ContractResponse } from '@/shared/types/api'
 
 type ContractPayload = {
   contractor_id: number
@@ -7,16 +9,19 @@ type ContractPayload = {
   amount: string
 }
 
-type ContractResponse = {
-  id: number
-  contract_number: string
-}
-
 export function useCreateContract() {
+  const queryClient = useQueryClient()
+  const { success, handleError } = useAppToast()
+
   return useMutation({
     mutationFn: async (payload: ContractPayload) => {
       const response = await http.post<ContractResponse>('/contracts', payload)
       return response.data
     },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['contracts'] })
+      success('Договор создан!')
+    },
+    onError: handleError,
   })
 }

@@ -1,1 +1,5 @@
 @import "tailwindcss";
+
+.Vue-Toastification__toast--success {
+  background-color: #01978E;
+}

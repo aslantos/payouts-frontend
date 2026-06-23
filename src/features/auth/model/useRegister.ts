@@ -1,6 +1,7 @@
 import { useMutation } from '@tanstack/vue-query'
 import { http } from '@/shared/api/http'
 import { useAuthStore } from '@/features/auth/model/authStore'
+import { useAppToast } from '@/shared/lib/toast'
 import type { AuthResponse } from '@/shared/types/api'
 
 type RegisterPayload = {
@@ -12,6 +13,7 @@ type RegisterPayload = {
 
 export function useRegister() {
   const authStore = useAuthStore()
+  const { success, handleError } = useAppToast()
 
   return useMutation({
     mutationFn: async (payload: RegisterPayload) => {
@@ -21,6 +23,8 @@ export function useRegister() {
     onSuccess: (data) => {
       authStore.setToken(data.accessToken)
       authStore.setUser(data.user)
+      success('Компания успешно зарегистрирована!')
     },
+    onError: handleError,
   })
 }

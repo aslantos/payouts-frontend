@@ -1,5 +1,6 @@
 import { useMutation, useQueryClient } from '@tanstack/vue-query'
 import { http } from '@/shared/api/http'
+import { useAppToast } from '@/shared/lib/toast'
 import type { ContractTemplateResponse } from '@/shared/types/api'
 
 type CreateTemplatePayload = {
@@ -9,6 +10,7 @@ type CreateTemplatePayload = {
 
 export function useCreateTemplate() {
   const queryClient = useQueryClient()
+  const { success, handleError } = useAppToast()
 
   return useMutation({
     mutationFn: async (payload: CreateTemplatePayload) => {
@@ -17,6 +19,8 @@ export function useCreateTemplate() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['templates'] })
+      success('Шаблон создан!')
     },
+    onError: handleError,
   })
 }
