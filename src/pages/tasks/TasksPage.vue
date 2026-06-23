@@ -3,17 +3,25 @@ import { ref, computed } from 'vue'
 import { useAuthStore } from '@/features/auth/model/authStore'
 import { useTasks } from '@/features/tasks/model/useTasks'
 import { useCreateTask } from '@/features/tasks/model/useCreateTask'
+import { useAcceptTask } from '@/features/tasks/model/useAcceptTask'
+import { useApproveTask } from '@/features/tasks/model/useApproveTask'
+import { useSubmitWork } from '@/features/tasks/model/useSubmitWork'
 import BaseButton from '@/shared/ui/BaseButton.vue'
 import BaseInput from '@/shared/ui/BaseInput.vue'
 import type { TaskStatus } from '@/shared/types/api'
 
 const authStore = useAuthStore()
 const isCompany = computed(() => authStore.user?.role !== 'CONTRACTOR')
+const isContractor = computed(() => authStore.user?.role === 'CONTRACTOR')
+const currentUserId = computed(() => authStore.user?.id)
 
 const { data: tasks, isLoading, isError } = useTasks()
 const createTask = useCreateTask()
+const acceptTask = useAcceptTask()
+const approveTask = useApproveTask()
+const submitWork = useSubmitWork()
 
-// Поля формы (строки — конвертируем в числа при сабмите)
+// --- Форма создания ---
 const showForm = ref(false)
 const title = ref('')
 const description = ref('')
@@ -24,7 +32,6 @@ const assignedToId = ref('')
 function handleSubmit() {
   if (!title.value || !budget.value) return
 
-  // Собираем payload только с заполненными необязательными полями
   const payload: Record<string, unknown> = {
     title: title.value,
     description: description.value,
@@ -45,7 +52,57 @@ function handleSubmit() {
   })
 }
 
-// Цвет и подпись статуса
+// --- Действия с задачей ---
+// Храним ID задачи в процессе действия — чтобы спиннер показывался только на нужной карточке
+const acceptingId = ref<number | null>(null)
+const acceptErrorId = ref<number | null>(null)
+
+function handleAccept(taskId: number) {
+  acceptingId.value = taskId
+  acceptErrorId.value = null
+  acceptTask.mutate(taskId, {
+    onError: () => { acceptErrorId.value = taskId },
+    onSettled: () => { acceptingId.value = null },
+  })
+}
+
+const approvingId = ref<number | null>(null)
+const approveErrorId = ref<number | null>(null)
+
+function handleApprove(taskId: number) {
+  approvingId.value = taskId
+  approveErrorId.value = null
+  approveTask.mutate(taskId, {
+    onError: () => { approveErrorId.value = taskId },
+    onSettled: () => { approvingId.value = null },
+  })
+}
+
+// --- Форма сдачи работы ---
+const submitFormTaskId = ref<number | null>(null)
+const submitContent = ref('')
+const submitAttachments = ref('')
+
+function openSubmitForm(taskId: number) {
+  submitFormTaskId.value = taskId
+  submitContent.value = ''
+  submitAttachments.value = ''
+}
+
+function closeSubmitForm() {
+  submitFormTaskId.value = null
+}
+
+function handleSubmitWork(taskId: number) {
+  if (!submitContent.value.trim()) return
+  const attachments = submitAttachments.value.trim() ? [submitAttachments.value.trim()] : []
+  submitWork.mutate(
+    { taskId, content: submitContent.value, attachments },
+    { onSuccess: closeSubmitForm },
+  )
+}
+
+// --- Статусы ---
 type StatusConfig = { label: string; cls: string }
 
 const STATUS_CONFIG: Record<TaskStatus, StatusConfig> = {
@@ -67,9 +124,9 @@ function formatBudget(value: number | string): string {
   return Number(value).toLocaleString('ru-RU') + ' ₸'
 }
 
-function formatDeadline(deadline: string | null): string {
-  if (!deadline) return ''
-  return new Date(deadline).toLocaleDateString('ru-RU', {
+function formatDeadline(dl: string | null): string {
+  if (!dl) return ''
+  return new Date(dl).toLocaleDateString('ru-RU', {
     day: 'numeric', month: 'short', year: 'numeric',
   })
 }
@@ -202,6 +259,91 @@ function formatDeadline(deadline: string | null): string {
 
         <!-- Бюджет -->
         <p class="text-sm font-semibold text-[#01978E]">{{ formatBudget(task.budget) }}</p>
+
+        <!-- ПОДРЯДЧИК: Принять — только если статус CREATED и задача открытая или назначена на него -->
+        <div
+          v-if="isContractor && task.status === 'CREATED' && (task.assignedToId === null || task.assignedToId === currentUserId)"
+          class="border-t border-gray-100 pt-3 flex flex-col gap-1"
+        >
+          <BaseButton
+            :disabled="acceptingId === task.id"
+            @click="handleAccept(task.id)"
+            class="w-full"
+          >
+            {{ acceptingId === task.id ? 'Принимаем...' : 'Принять' }}
+          </BaseButton>
+          <p v-if="acceptErrorId === task.id" class="text-xs text-red-500 text-center">
+            Не удалось принять. Задача уже занята или нет прав.
+          </p>
+        </div>
+
+        <!-- ПОДРЯДЧИК: Сдать работу — только если задача назначена на него и статус ACCEPTED/IN_PROGRESS -->
+        <div
+          v-if="isContractor && (task.status === 'ACCEPTED' || task.status === 'IN_PROGRESS') && task.assignedToId === currentUserId"
+          class="border-t border-gray-100 pt-3 flex flex-col gap-2"
+        >
+          <!-- Кнопка «Сдать работу» — пока форма не открыта -->
+          <BaseButton
+            v-if="submitFormTaskId !== task.id"
+            @click="openSubmitForm(task.id)"
+            class="w-full"
+          >
+            Сдать работу
+          </BaseButton>
+
+          <!-- Форма сдачи работы -->
+          <template v-else>
+            <textarea
+              v-model="submitContent"
+              placeholder="Опишите выполненную работу"
+              rows="3"
+              class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#01978E] focus:border-transparent resize-none"
+            />
+            <input
+              type="text"
+              v-model="submitAttachments"
+              placeholder="Ссылка на результат (необязательно)"
+              class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#01978E] focus:border-transparent"
+            />
+            <p v-if="submitWork.isError.value" class="text-xs text-red-500">
+              Не удалось отправить. Проверьте данные.
+            </p>
+            <div class="flex gap-2">
+              <BaseButton
+                :disabled="submitWork.isPending.value || !submitContent.trim()"
+                @click="handleSubmitWork(task.id)"
+                class="flex-1"
+              >
+                {{ submitWork.isPending.value ? 'Отправляем...' : 'Отправить' }}
+              </BaseButton>
+              <button
+                type="button"
+                @click="closeSubmitForm"
+                class="px-4 py-2 text-sm text-gray-500 hover:text-gray-700 transition-colors"
+              >
+                Отмена
+              </button>
+            </div>
+          </template>
+        </div>
+
+        <!-- КОМПАНИЯ: Одобрить — только если статус SUBMITTED или REVIEW -->
+        <div
+          v-if="isCompany && (task.status === 'SUBMITTED' || task.status === 'REVIEW')"
+          class="border-t border-gray-100 pt-3 flex flex-col gap-1"
+        >
+          <BaseButton
+            :disabled="approvingId === task.id"
+            @click="handleApprove(task.id)"
+            class="w-full"
+          >
+            {{ approvingId === task.id ? 'Одобряем...' : 'Одобрить' }}
+          </BaseButton>
+          <p v-if="approveErrorId === task.id" class="text-xs text-red-500 text-center">
+            Нет прав или задача в неверном статусе.
+          </p>
+        </div>
+
       </div>
     </div>
 

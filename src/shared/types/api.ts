@@ -43,3 +43,12 @@ export type TaskResponse = {
   status: TaskStatus
   createdAt: string
 }
+
+export type SubmissionResponse = {
+  id: number
+  taskId: number
+  submittedById: number
+  content: string
+  attachments: string[]
+  createdAt: string
+}

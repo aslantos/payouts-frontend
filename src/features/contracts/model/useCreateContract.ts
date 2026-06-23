@@ -15,7 +15,7 @@ type ContractResponse = {
 export function useCreateContract() {
   return useMutation({
     mutationFn: async (payload: ContractPayload) => {
-      const response = await http.post<ContractResponse>('/contracts/', payload)
+      const response = await http.post<ContractResponse>('/contracts', payload)
       return response.data
     },
   })

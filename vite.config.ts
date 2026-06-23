@@ -14,9 +14,9 @@ export default defineConfig({
   server: {
     proxy: {
       '/api': {
-        target: 'http://172.20.10.12:8080',
+        target: 'https://modular-payroll-production.up.railway.app',
         changeOrigin: true,
-        secure: false,
+        secure: true,
       },  
     },
   },
