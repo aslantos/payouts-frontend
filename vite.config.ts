@@ -14,9 +14,9 @@ export default defineConfig({
   server: {
     proxy: {
       '/api': {
-        target: 'https://happy-forgiveness-production-caca.up.railway.app',
+        target: 'http://172.20.10.12:8080',
         changeOrigin: true,
-        secure: true,
+        secure: false,
       },  
     },
   },

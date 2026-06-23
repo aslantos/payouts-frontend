@@ -9,7 +9,6 @@ import BaseButton from '@/shared/ui/BaseButton.vue'
 
 const companyName = ref('')
 const bin = ref('')
-const username = ref('')
 const email = ref('')
 const password = ref('')
 
@@ -27,16 +26,15 @@ const registerErrorText = computed(() => {
 function handleRegister() {
   registerMutation.mutate(
     {
-      company_name: companyName.value,
+      companyName: companyName.value,
       bin: bin.value,
-      username: username.value,
       email: email.value,
       password: password.value,
     },
     {
       onSuccess: () => {
         setTimeout(() => {
-          router.push('/login')
+          router.push('/dashboard')
         }, 1500)
       },
     }
@@ -55,7 +53,6 @@ function handleRegister() {
 
       <BaseInput label="Company Name" placeholder="Enter your company name" v-model="companyName" />
       <BaseInput label="BIN" placeholder="Enter BIN (12 digits)" v-model="bin" />
-      <BaseInput label="Username" placeholder="Enter username" v-model="username" />
       <BaseInput label="Email" placeholder="Enter email address" v-model="email" />
       <BaseInput label="Password" placeholder="Enter password" type="password" v-model="password" />
 

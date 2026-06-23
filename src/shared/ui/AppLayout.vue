@@ -1,33 +1,42 @@
 <script setup lang="ts">
-import { ref } from 'vue'
+import { computed } from 'vue'
 import { useRoute, RouterLink, RouterView } from 'vue-router'
+import { useAuthStore } from '@/features/auth/model/authStore'
 
 const route = useRoute()
+const authStore = useAuthStore()
 
-const showMoreMenu = ref(false)
+// Меняется автоматически при изменении authStore.user.role —
+// computed «следит» за реактивным значением из Pinia
+const navLinks = computed(() => {
+  if (authStore.user?.role === 'CONTRACTOR') {
+    return [
+      { label: 'Доступные задачи', path: '/tasks' },
+      { label: 'Мои договоры', path: '/contracts' },
+      { label: 'Профиль', path: '/profile' },
+    ]
+  }
+  return [
+    { label: 'Задачи', path: '/tasks' },
+    { label: 'Договоры', path: '/contracts' },
+    { label: 'Шаблоны', path: '/templates' },
+    { label: 'Профиль', path: '/profile' },
+  ]
+})
 
-const navLinks = [
-  { label: 'People', path: '/people' },
-  { label: 'Works', path: '/works' },
-  { label: 'Contract', path: '/contract' },
-  { label: 'Company', path: '/company' },
-]
-
-const moreLinks = [
-  { label: 'Payouts', path: '/payouts' },
-  { label: 'Tariffs', path: '/tariffs' },
-]
+const avatarLetter = computed(() =>
+  authStore.user?.email?.[0]?.toUpperCase() ?? '?'
+)
 
 function isActive(path: string): boolean {
   return route.path === path || route.path.startsWith(path + '/')
 }
-
 </script>
 
 <template>
   <div class="min-h-screen bg-gray-50">
     <!-- Navbar -->
-    <header class="bg-white shadow-lg px-6 py-3">
+    <header class="bg-white shadow-sm px-6 py-3">
       <div class="flex items-center justify-between">
 
         <!-- Левая часть: логотип + навигация -->
@@ -42,7 +51,7 @@ function isActive(path: string): boolean {
             </div>
           </RouterLink>
 
-          <!-- Навигация (прижата к логотипу) -->
+          <!-- Навигация -->
           <nav class="flex items-center gap-1">
             <RouterLink
               v-for="link in navLinks"
@@ -57,52 +66,11 @@ function isActive(path: string): boolean {
             >
               {{ link.label }}
             </RouterLink>
-
-            <!-- More — выпадающее меню -->
-            <div class="relative">
-              <button
-                @click="showMoreMenu = !showMoreMenu"
-                :class="[
-                  'px-3 py-1.5 rounded-md text-sm font-medium flex items-center gap-1 transition-colors',
-                  moreLinks.some(l => isActive(l.path))
-                    ? 'bg-[#01978E] text-white'
-                    : 'text-gray-600 hover:text-[#01978E]',
-                ]"
-              >
-                More
-                <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
-                  <path d="M2 4l4 4 4-4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" />
-                </svg>
-              </button>
-
-              <div v-if="showMoreMenu" class="fixed inset-0 z-10" @click="showMoreMenu = false" />
-
-              <div
-                v-if="showMoreMenu"
-                class="absolute top-full left-0 mt-1 bg-white rounded-md shadow-md border border-gray-100 py-1 min-w-32 z-20"
-              >
-                <RouterLink
-                  v-for="link in moreLinks"
-                  :key="link.path"
-                  :to="link.path"
-                  @click="showMoreMenu = false"
-                  :class="[
-                    'block px-4 py-2 text-sm',
-                    isActive(link.path)
-                      ? 'text-[#01978E] font-medium bg-teal-50'
-                      : 'text-gray-700 hover:bg-gray-50',
-                  ]"
-                >
-                  {{ link.label }}
-                </RouterLink>
-              </div>
-            </div>
           </nav>
         </div>
 
         <!-- Правая часть: колокольчик + аватар -->
         <div class="flex items-center gap-2 shrink-0">
-          <!-- Колокольчик -->
           <button class="w-8 h-8 flex items-center justify-center rounded-full text-gray-500 hover:bg-gray-100 transition-colors">
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
               <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9" />
@@ -110,12 +78,10 @@ function isActive(path: string): boolean {
             </svg>
           </button>
 
-          <!-- Аватар пользователя -->
-          <div class="w-8 h-8 rounded-full bg-[#01978E] text-white text-xs font-semibold flex items-center justify-center cursor-pointer">
-            Me
+          <div class="w-8 h-8 rounded-md bg-[#01978E] text-white text-xs font-semibold flex items-center justify-center cursor-pointer">
+            {{ avatarLetter }}
           </div>
         </div>
-
       </div>
     </header>
 

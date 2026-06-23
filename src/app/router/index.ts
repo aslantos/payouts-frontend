@@ -5,6 +5,11 @@ import LoginPage from '@/pages/login/LoginPage.vue'
 import RegisterCompanyPage from '@/pages/register-company/RegisterCompanyPage.vue'
 import HomePage from '@/pages/home/HomePage.vue'
 import DashboardPage from '@/pages/dashboard/DashboardPage.vue'
+import TasksPage from '@/pages/tasks/TasksPage.vue'
+import ContractsPage from '@/pages/contracts/ContractsPage.vue'
+import TemplatesPage from '@/pages/templates/TemplatesPage.vue'
+import ProfilePage from '@/pages/profile/ProfilePage.vue'
+// Старые страницы оставлены — спроси у пользователя, нужны ли они дальше
 import PeoplePage from '@/pages/people/PeoplePage.vue'
 import WorksPage from '@/pages/works/WorksPage.vue'
 import ContractPage from '@/pages/contract/ContractPage.vue'
@@ -25,6 +30,11 @@ const routes = [
     meta: { requiresAuth: true },
     children: [
       { path: 'dashboard', component: DashboardPage },
+      { path: 'tasks', component: TasksPage },
+      { path: 'contracts', component: ContractsPage },
+      { path: 'templates', component: TemplatesPage },
+      { path: 'profile', component: ProfilePage },
+      // Старые маршруты — пока оставлены, уточни нужны ли
       { path: 'people', component: PeoplePage },
       { path: 'works', component: WorksPage },
       { path: 'contract', component: ContractPage },

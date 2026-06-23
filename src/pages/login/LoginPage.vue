@@ -19,7 +19,7 @@ const isSelfEmployed = ref(false)
 const registrationSuccess = ref(false)
 
 // Log In form
-const username = ref('')
+const loginEmail = ref('')
 const password = ref('')
 
 const isLogin = ref(false)
@@ -38,7 +38,7 @@ const registerErrorText = computed(() => {
 
 function handleLogin() {
   loginMutation.mutate(
-    { username: username.value, password: password.value },
+    { email: loginEmail.value, password: password.value },
     {
       onSuccess: () => {
         router.push('/dashboard')
@@ -50,10 +50,10 @@ function handleLogin() {
 function handleRegister() {
   registerMutation.mutate(
     {
-      username: signupUsername.value,
+      userame: signupUsername.value,
       email: email.value,
       password: signupPassword.value,
-      is_self_employed: isSelfEmployed.value,
+      selfEmployed: isSelfEmployed.value,
     },
     {
       onSuccess: () => {
@@ -165,7 +165,7 @@ function handleRegister() {
             Аккаунт успешно создан! Войдите в систему.
           </p>
 
-          <BaseInput label="Username" placeholder="Enter your username" v-model="username" />
+          <BaseInput label="Email" placeholder="Enter your email" v-model="loginEmail" />
           <BaseInput label="Password" placeholder="Enter your password" type="password" v-model="password" />
 
           <div class="flex justify-between">

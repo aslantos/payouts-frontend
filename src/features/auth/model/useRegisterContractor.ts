@@ -1,27 +1,26 @@
 import { useMutation } from '@tanstack/vue-query'
 import { http } from '@/shared/api/http'
-
-type RegisterContractorResponse = {
-  id: number
-  username: string
-  email: string
-  role: string
-  company: number | null
-  is_self_employed: boolean
-}
+import { useAuthStore } from '@/features/auth/model/authStore'
+import type { AuthResponse } from '@/shared/types/api'
 
 type RegisterContractorPayload = {
-  username: string
+  userame: string // намеренная опечатка — именно так называется поле в Spring API
   email: string
   password: string
-  is_self_employed: boolean
+  selfEmployed: boolean
 }
 
 export function useRegisterContractor() {
+  const authStore = useAuthStore()
+
   return useMutation({
     mutationFn: async (payload: RegisterContractorPayload) => {
-      const response = await http.post<RegisterContractorResponse>('/auth/register-contractor/', payload)
+      const response = await http.post<AuthResponse>('/auth/register-contractor', payload)
       return response.data
+    },
+    onSuccess: (data) => {
+      authStore.setToken(data.accessToken)
+      authStore.setUser(data.user)
     },
   })
 }
