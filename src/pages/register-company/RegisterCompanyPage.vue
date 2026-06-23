@@ -57,7 +57,7 @@ function handleRegister() {
       <BaseInput label="Password" placeholder="Enter password" type="password" v-model="password" />
 
       <BaseButton
-        class="mt-2 flex items-center justify-center gap-4"
+        class="mt-2 w-full flex items-center justify-center gap-4"
         :disabled="registerMutation.isPending.value"
         @click="handleRegister"
       >

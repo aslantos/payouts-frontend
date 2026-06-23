@@ -117,7 +117,7 @@ function handleRegister() {
           </label>
 
           <BaseButton
-            class="mt-2 flex items-center justify-center gap-4"
+            class="mt-2 w-full flex items-center justify-center gap-4"
             :disabled="registerMutation.isPending.value"
             @click="handleRegister"
           >
@@ -177,7 +177,7 @@ function handleRegister() {
           </div>
 
           <BaseButton
-            class="mt-2 flex items-center justify-center gap-4"
+            class="mt-2 w-full flex items-center justify-center gap-4"
             :disabled="loginMutation.isPending.value"
             @click="handleLogin"
           >

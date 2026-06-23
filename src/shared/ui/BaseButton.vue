@@ -9,7 +9,7 @@ defineProps<{
   <button
     :type="type ?? 'button'"
     :disabled="disabled"
-    class="bg-[#01978E] text-white font-bold py-1 w-full hover:bg-[#017d75] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+    class="bg-[#01978E] text-white text-sm font-semibold px-4 py-2 rounded-lg hover:bg-[#017d75] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
   >
     <slot />
   </button>
