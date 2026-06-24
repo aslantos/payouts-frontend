@@ -10,6 +10,9 @@ export const useAuthStore = defineStore('auth', () => {
 
   const isAuthenticated = computed(() => !!token.value)
 
+  // false пока App.vue не закончил восстановление сессии
+  const isReady = ref(false)
+
   function setToken(newToken: string) {
     token.value = newToken
     localStorage.setItem('access_token', newToken)
@@ -27,5 +30,9 @@ export const useAuthStore = defineStore('auth', () => {
     localStorage.removeItem('auth_user')
   }
 
-  return { token, user, isAuthenticated, setToken, setUser, clearToken }
+  function setReady() {
+    isReady.value = true
+  }
+
+  return { token, user, isAuthenticated, isReady, setToken, setUser, clearToken, setReady }
 })

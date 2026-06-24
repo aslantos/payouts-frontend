@@ -1,4 +1,5 @@
 import { createRouter, createWebHistory } from 'vue-router'
+import { watch } from 'vue'
 import { useAuthStore } from '@/features/auth/model/authStore'
 import AppLayout from '@/shared/ui/AppLayout.vue'
 import LoginPage from '@/pages/login/LoginPage.vue'
@@ -50,8 +51,20 @@ export const router = createRouter({
   routes,
 })
 
-router.beforeEach((to) => {
+router.beforeEach(async (to) => {
   const authStore = useAuthStore()
+
+  // Ждём пока App.vue восстановит сессию через /auth/me
+  if (!authStore.isReady) {
+    await new Promise<void>((resolve) => {
+      const stop = watch(
+        () => authStore.isReady,
+        (ready) => {
+          if (ready) { stop(); resolve() }
+        }
+      )
+    })
+  }
 
   if (to.meta.requiresAuth && !authStore.isAuthenticated) {
     return '/login'
