@@ -6,6 +6,7 @@ import RegisterCompanyPage from '@/pages/register-company/RegisterCompanyPage.vu
 import HomePage from '@/pages/home/HomePage.vue'
 import DashboardPage from '@/pages/dashboard/DashboardPage.vue'
 import TasksPage from '@/pages/tasks/TasksPage.vue'
+import TaskDetailPage from '@/pages/task-detail/TaskDetailPage.vue'
 import ContractsPage from '@/pages/contracts/ContractsPage.vue'
 import TemplatesPage from '@/pages/templates/TemplatesPage.vue'
 import ProfilePage from '@/pages/profile/ProfilePage.vue'
@@ -31,6 +32,7 @@ const routes = [
     children: [
       { path: 'dashboard', component: DashboardPage },
       { path: 'tasks', component: TasksPage },
+      { path: 'tasks/:id', component: TaskDetailPage },
       { path: 'contracts', component: ContractsPage },
       { path: 'templates', component: TemplatesPage },
       { path: 'profile', component: ProfilePage },

@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { ref, computed } from 'vue'
+import { useRouter } from 'vue-router'
 import { useAuthStore } from '@/features/auth/model/authStore'
 import { useTasks } from '@/features/tasks/model/useTasks'
 import { useCreateTask } from '@/features/tasks/model/useCreateTask'
@@ -10,6 +11,7 @@ import BaseButton from '@/shared/ui/BaseButton.vue'
 import BaseInput from '@/shared/ui/BaseInput.vue'
 import type { TaskStatus } from '@/shared/types/api'
 
+const router = useRouter()
 const authStore = useAuthStore()
 const isCompany = computed(() => authStore.user?.role !== 'CONTRACTOR')
 const isContractor = computed(() => authStore.user?.role === 'CONTRACTOR')
@@ -229,7 +231,8 @@ function formatDeadline(dl: string | null): string {
       <div
         v-for="task in tasks"
         :key="task.id"
-        class="bg-white rounded-xl shadow-sm border border-gray-100 p-5 flex flex-col gap-3"
+        @click="router.push(`/tasks/${task.id}`)"
+        class="bg-white rounded-xl shadow-sm border border-gray-100 p-5 flex flex-col gap-3 cursor-pointer hover:border-gray-200 transition-colors"
       >
         <!-- Статус + дедлайн -->
         <div class="flex items-center justify-between">
@@ -253,6 +256,7 @@ function formatDeadline(dl: string | null): string {
         <!-- ПОДРЯДЧИК: Принять — только если статус CREATED и задача открытая или назначена на него -->
         <div
           v-if="isContractor && task.status === 'CREATED' && (task.assignedToId === null || task.assignedToId === currentUserId)"
+          @click.stop
           class="border-t border-gray-100 pt-3 flex flex-col gap-1"
         >
           <BaseButton
@@ -270,6 +274,7 @@ function formatDeadline(dl: string | null): string {
         <!-- ПОДРЯДЧИК: Сдать работу — только если задача назначена на него и статус ACCEPTED/IN_PROGRESS -->
         <div
           v-if="isContractor && (task.status === 'ACCEPTED' || task.status === 'IN_PROGRESS') && task.assignedToId === currentUserId"
+          @click.stop
           class="border-t border-gray-100 pt-3 flex flex-col gap-2"
         >
           <!-- Кнопка «Сдать работу» — пока форма не открыта -->
@@ -320,6 +325,7 @@ function formatDeadline(dl: string | null): string {
         <!-- КОМПАНИЯ: Одобрить — только если статус SUBMITTED или REVIEW -->
         <div
           v-if="isCompany && (task.status === 'SUBMITTED' || task.status === 'REVIEW')"
+          @click.stop
           class="border-t border-gray-100 pt-3 flex flex-col gap-1"
         >
           <BaseButton

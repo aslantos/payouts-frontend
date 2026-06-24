@@ -132,10 +132,11 @@ const CONTRACT_STATUS: Record<ContractStatus, StatusConfig> = {
           Задач пока нет
         </div>
         <div v-else class="grid grid-cols-1 md:grid-cols-2 gap-3">
-          <div
+          <RouterLink
             v-for="task in recentTasks"
             :key="task.id"
-            class="bg-white rounded-xl shadow-sm border border-gray-100 p-4 flex flex-col gap-2"
+            :to="`/tasks/${task.id}`"
+            class="bg-white rounded-xl shadow-sm border border-gray-100 p-4 flex flex-col gap-2 hover:border-[#01978E]/30 transition-colors"
           >
             <div class="flex items-center justify-between">
               <span :class="['text-xs font-medium px-2.5 py-1 rounded-full', TASK_STATUS[task.status]?.cls ?? 'bg-gray-100 text-gray-600']">
@@ -147,7 +148,7 @@ const CONTRACT_STATUS: Record<ContractStatus, StatusConfig> = {
             </div>
             <p class="font-semibold text-gray-800 text-sm leading-snug">{{ task.title }}</p>
             <p class="text-sm font-semibold text-[#01978E]">{{ formatBudget(task.budget) }}</p>
-          </div>
+          </RouterLink>
         </div>
       </section>
 
@@ -216,10 +217,11 @@ const CONTRACT_STATUS: Record<ContractStatus, StatusConfig> = {
         </div>
 
         <div v-else class="grid grid-cols-1 md:grid-cols-2 gap-3">
-          <div
+          <RouterLink
             v-for="task in activeTasks"
             :key="task.id"
-            class="bg-white rounded-xl shadow-sm border border-[#01978E]/20 p-4 flex flex-col gap-2"
+            :to="`/tasks/${task.id}`"
+            class="bg-white rounded-xl shadow-sm border border-[#01978E]/20 p-4 flex flex-col gap-2 hover:border-[#01978E]/50 transition-colors"
           >
             <div class="flex items-center justify-between">
               <span :class="['text-xs font-medium px-2.5 py-1 rounded-full', TASK_STATUS[task.status]?.cls ?? 'bg-gray-100 text-gray-600']">
@@ -232,7 +234,7 @@ const CONTRACT_STATUS: Record<ContractStatus, StatusConfig> = {
             <p class="font-semibold text-gray-800 text-sm">{{ task.title }}</p>
             <p class="text-xs text-gray-500 line-clamp-2">{{ task.description }}</p>
             <p class="text-sm font-semibold text-[#01978E]">{{ formatBudget(task.budget) }}</p>
-          </div>
+          </RouterLink>
         </div>
       </section>
 
