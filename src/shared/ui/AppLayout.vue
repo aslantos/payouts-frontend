@@ -78,9 +78,12 @@ function isActive(path: string): boolean {
             </svg>
           </button>
 
-          <div class="w-8 h-8 rounded-md bg-[#01978E] text-white text-xs font-semibold flex items-center justify-center cursor-pointer">
+          <RouterLink
+            to="/profile"
+            class="w-8 h-8 rounded-md bg-[#01978E] text-white text-xs font-semibold flex items-center justify-center hover:opacity-80 transition-opacity"
+          >
             {{ avatarLetter }}
-          </div>
+          </RouterLink>
         </div>
       </div>
     </header>
