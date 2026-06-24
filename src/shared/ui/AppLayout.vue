@@ -20,6 +20,7 @@ const navLinks = computed(() => {
     { label: 'Задачи', path: '/tasks' },
     { label: 'Договоры', path: '/contracts' },
     { label: 'Шаблоны', path: '/templates' },
+    { label: 'Выплаты', path: '/payouts' },
     { label: 'Профиль', path: '/profile' },
   ]
 })

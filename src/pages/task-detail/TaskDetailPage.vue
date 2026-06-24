@@ -7,6 +7,7 @@ import { useTaskSubmissions } from '@/features/tasks/model/useTaskSubmissions'
 import { useAcceptTask } from '@/features/tasks/model/useAcceptTask'
 import { useApproveTask } from '@/features/tasks/model/useApproveTask'
 import { useSubmitWork } from '@/features/tasks/model/useSubmitWork'
+import { useInitiatePayment } from '@/features/payments/model/useInitiatePayment'
 import BaseButton from '@/shared/ui/BaseButton.vue'
 import type { TaskStatus } from '@/shared/types/api'
 
@@ -34,6 +35,12 @@ const { data: submissions } = useTaskSubmissions(taskId, showSubmissions)
 const acceptTask = useAcceptTask()
 const approveTask = useApproveTask()
 const submitWork = useSubmitWork()
+const initiatePayment = useInitiatePayment()
+
+function handlePay() {
+  if (!task.value) return
+  initiatePayment.mutate(task.value.id)
+}
 
 const showSubmitForm = ref(false)
 const submitContent = ref('')
@@ -75,7 +82,7 @@ const STATUS_CONFIG: Record<TaskStatus, StatusConfig> = {
   REVIEW:      { label: 'Ревью',       cls: 'bg-orange-100 text-orange-700' },
   APPROVED:    { label: 'Одобрена',    cls: 'bg-green-100 text-green-700' },
   REJECTED:    { label: 'Отклонена',   cls: 'bg-red-100 text-red-700' },
-  COMPLETED:   { label: 'Завершена',   cls: 'bg-green-100 text-green-600' },
+  COMPLETED:   { label: 'Завершена',   cls: 'bg-teal-100 text-teal-700' },
 }
 
 function formatBudget(value: number | string): string {
@@ -225,6 +232,20 @@ function formatDate(date: string | null): string {
             class="w-full"
           >
             {{ approveTask.isPending.value ? 'Одобряем...' : 'Одобрить задачу' }}
+          </BaseButton>
+        </div>
+
+        <!-- КОМПАНИЯ: Выплатить — только статус APPROVED, кнопка исчезает после COMPLETED -->
+        <div
+          v-if="isCompany && task.status === 'APPROVED'"
+          class="border-t border-gray-100 pt-4"
+        >
+          <BaseButton
+            :disabled="initiatePayment.isPending.value"
+            @click="handlePay"
+            class="w-full"
+          >
+            {{ initiatePayment.isPending.value ? 'Инициируем выплату...' : 'Выплатить' }}
           </BaseButton>
         </div>
 

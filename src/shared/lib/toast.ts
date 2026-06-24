@@ -16,7 +16,6 @@ export function useAppToast() {
     toast.info(message)
   }
 
-  // Единый обработчик ошибок — чтобы не дублировать в каждом хуке
   function handleError(err: unknown) {
     if (axios.isAxiosError(err)) {
       const status = err.response?.status

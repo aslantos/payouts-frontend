@@ -73,3 +73,17 @@ export type ContractTemplateResponse = {
   bodyTemplate: string
   createdAt: string
 }
+
+export type PaymentStatus = 'PENDING' | 'PAID' | 'FAILED'
+
+export type PaymentResponse = {
+  id: number
+  taskId: number
+  contractId: number
+  contractorId: number
+  amount: number
+  status: PaymentStatus
+  providerTxId: string
+  createdAt: string
+  paidAt: string | null
+}

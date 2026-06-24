@@ -24,7 +24,6 @@ const routes = [
   { path: '/register-company', component: RegisterCompanyPage },
   { path: '/', component: HomePage },
 
-  // Приватные — внутри AppLayout (дочерние маршруты)
   {
     path: '/',
     component: AppLayout,
@@ -36,7 +35,6 @@ const routes = [
       { path: 'contracts', component: ContractsPage },
       { path: 'templates', component: TemplatesPage },
       { path: 'profile', component: ProfilePage },
-      // Старые маршруты — пока оставлены, уточни нужны ли
       { path: 'people', component: PeoplePage },
       { path: 'works', component: WorksPage },
       { path: 'contract', component: ContractPage },

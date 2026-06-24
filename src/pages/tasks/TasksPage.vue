@@ -7,6 +7,7 @@ import { useCreateTask } from '@/features/tasks/model/useCreateTask'
 import { useAcceptTask } from '@/features/tasks/model/useAcceptTask'
 import { useApproveTask } from '@/features/tasks/model/useApproveTask'
 import { useSubmitWork } from '@/features/tasks/model/useSubmitWork'
+import { useInitiatePayment } from '@/features/payments/model/useInitiatePayment'
 import BaseButton from '@/shared/ui/BaseButton.vue'
 import BaseInput from '@/shared/ui/BaseInput.vue'
 import type { TaskStatus } from '@/shared/types/api'
@@ -22,6 +23,16 @@ const createTask = useCreateTask()
 const acceptTask = useAcceptTask()
 const approveTask = useApproveTask()
 const submitWork = useSubmitWork()
+const initiatePayment = useInitiatePayment()
+
+const payingId = ref<number | null>(null)
+
+function handlePay(taskId: number) {
+  payingId.value = taskId
+  initiatePayment.mutate(taskId, {
+    onSettled: () => { payingId.value = null },
+  })
+}
 
 // --- Форма создания ---
 const showForm = ref(false)
@@ -112,7 +123,7 @@ const STATUS_CONFIG: Record<TaskStatus, StatusConfig> = {
   REVIEW:      { label: 'Ревью',       cls: 'bg-orange-100 text-orange-700' },
   APPROVED:    { label: 'Одобрена',    cls: 'bg-green-100 text-green-700' },
   REJECTED:    { label: 'Отклонена',   cls: 'bg-red-100 text-red-700' },
-  COMPLETED:   { label: 'Завершена',   cls: 'bg-green-100 text-green-600' },
+  COMPLETED:   { label: 'Завершена',   cls: 'bg-teal-100 text-teal-700' },
 }
 
 function statusConfig(status: TaskStatus): StatusConfig {
@@ -338,6 +349,21 @@ function formatDeadline(dl: string | null): string {
           <p v-if="approveErrorId === task.id" class="text-xs text-red-500 text-center">
             Нет прав или задача в неверном статусе.
           </p>
+        </div>
+
+        <!-- КОМПАНИЯ: Выплатить — только статус APPROVED -->
+        <div
+          v-if="isCompany && task.status === 'APPROVED'"
+          @click.stop
+          class="border-t border-gray-100 pt-3"
+        >
+          <BaseButton
+            :disabled="payingId === task.id"
+            @click="handlePay(task.id)"
+            class="w-full"
+          >
+            {{ payingId === task.id ? 'Инициируем...' : 'Выплатить' }}
+          </BaseButton>
         </div>
 
       </div>
