@@ -103,7 +103,7 @@ function handleRegister() {
           class="absolute top-0 h-full w-[57%] flex items-center justify-center transition-all duration-500 ease-in-out"
           :class="isLogin ? 'left-0' : 'left-[43%]'"
         >
-        <div v-if="!isLogin" class="w-[75%] flex flex-col gap-5">
+        <form v-if="!isLogin" class="w-[75%] flex flex-col gap-5" @submit.prevent="handleRegister">
 
           <h1 class="text-[40px] font-bold text-center">Sign Up</h1>
 
@@ -117,9 +117,9 @@ function handleRegister() {
           </label>
 
           <BaseButton
+            type="submit"
             class="mt-2 w-full flex items-center justify-center gap-4"
             :disabled="registerMutation.isPending.value"
-            @click="handleRegister"
           >
             <span class="text-2xl">{{ registerMutation.isPending.value ? 'Регистрируем...' : 'Sign up' }}</span>
             <svg v-if="!registerMutation.isPending.value" viewBox="0 0 29 23" fill="none" class="w-6 h-5" xmlns="http://www.w3.org/2000/svg">
@@ -156,9 +156,9 @@ function handleRegister() {
             </router-link>
           </p>
 
-        </div>
+        </form>
         <!-- if: Log In -->
-        <div v-else class="w-[75%] flex flex-col gap-5">
+        <form v-else class="w-[75%] flex flex-col gap-5" @submit.prevent="handleLogin">
           <h1 class="text-[40px] font-black text-center">Log In</h1>
 
           <p v-if="registrationSuccess" class="text-sm text-green-600 text-center bg-green-50 rounded-lg p-3">
@@ -177,9 +177,9 @@ function handleRegister() {
           </div>
 
           <BaseButton
+            type="submit"
             class="mt-2 w-full flex items-center justify-center gap-4"
             :disabled="loginMutation.isPending.value"
-            @click="handleLogin"
           >
             <span class="text-2xl">{{ loginMutation.isPending.value ? 'Logging in...' : 'Log In' }}</span>
             <svg v-if="!loginMutation.isPending.value" viewBox="0 0 29 23" fill="none" class="w-6 h-5" xmlns="http://www.w3.org/2000/svg">
@@ -210,7 +210,7 @@ function handleRegister() {
           </div>
 
 
-        </div>
+        </form>
       </div>
 
     </div>
