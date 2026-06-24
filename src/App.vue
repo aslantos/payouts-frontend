@@ -14,14 +14,17 @@ onMounted(async () => {
       const response = await http.get<UserResponse>('/auth/me')
       authStore.setUser(response.data)
     }
-  } catch {
-    // /auth/me вернул ошибку (401, 403, 500, сеть) → токен недействителен
+  } catch (error: any) {
+  // Только 401 = невалидный токен → разлогинить
+  if (error?.response?.status === 401) {
     authStore.clearToken()
     router.push('/login')
-  } finally {
-    // Всегда сигнализируем guard'у что сессия восстановлена (или сброшена)
-    authStore.setReady()
   }
+  // 403, 500, сеть и т.д. — токен есть, просто /me недоступен
+  // НЕ разлогиниваем, продолжаем как залогиненный
+} finally {
+  authStore.setReady()
+}
 })
 </script>
 
