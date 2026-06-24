@@ -153,8 +153,8 @@ const filteredTasks = computed(() =>
   tasks.value?.filter(task => {
     if (filters.status && task.status !== filters.status) return false
     if (filters.search && !task.title.toLowerCase().includes(filters.search.toLowerCase())) return false
-    if (filters.budgetMin !== null && task.budget < filters.budgetMin) return false
-    if (filters.budgetMax !== null && task.budget > filters.budgetMax) return false
+    if (filters.budgetMin !== null && Number(task.budget) < filters.budgetMin) return false
+    if (filters.budgetMax !== null && Number(task.budget) > filters.budgetMax) return false
     return true
   }) ?? []
 )
