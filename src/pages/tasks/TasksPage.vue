@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, computed } from 'vue'
+import { ref, computed, reactive } from 'vue'
 import { useRouter } from 'vue-router'
 import { useAuthStore } from '@/features/auth/model/authStore'
 import { useTasks } from '@/features/tasks/model/useTasks'
@@ -140,6 +140,32 @@ function formatDeadline(dl: string | null): string {
     day: 'numeric', month: 'short', year: 'numeric',
   })
 }
+
+// --- Фильтры ---
+const filters = reactive({
+  status: '' as TaskStatus | '',
+  search: '',
+  budgetMin: null as number | null,
+  budgetMax: null as number | null,
+})
+
+const filteredTasks = computed(() =>
+  tasks.value?.filter(task => {
+    if (filters.status && task.status !== filters.status) return false
+    if (filters.search && !task.title.toLowerCase().includes(filters.search.toLowerCase())) return false
+    if (filters.budgetMin !== null && task.budget < filters.budgetMin) return false
+    if (filters.budgetMax !== null && task.budget > filters.budgetMax) return false
+    return true
+  }) ?? []
+)
+
+const hasActiveFilters = computed(() =>
+  filters.status !== '' || filters.search !== '' || filters.budgetMin !== null || filters.budgetMax !== null
+)
+
+function resetFilters() {
+  Object.assign(filters, { status: '', search: '', budgetMin: null, budgetMax: null })
+}
 </script>
 
 <template>
@@ -237,137 +263,245 @@ function formatDeadline(dl: string | null): string {
       <p v-if="isCompany" class="text-sm">Нажмите «Создать задачу», чтобы добавить первую</p>
     </div>
 
-    <!-- Список задач -->
-    <div v-else class="grid grid-cols-1 md:grid-cols-2 gap-4">
-      <div
-        v-for="task in tasks"
-        :key="task.id"
-        @click="router.push(`/tasks/${task.id}`)"
-        class="bg-white rounded-xl shadow-sm border border-gray-100 p-5 flex flex-col gap-3 cursor-pointer hover:border-gray-200 transition-colors"
-      >
-        <!-- Статус + дедлайн -->
-        <div class="flex items-center justify-between">
-          <span :class="['text-xs font-medium px-2.5 py-1 rounded-full', statusConfig(task.status).cls]">
-            {{ statusConfig(task.status).label }}
-          </span>
-          <span v-if="task.deadline" class="text-xs text-gray-400">
-            до {{ formatDeadline(task.deadline) }}
-          </span>
-        </div>
+    <!-- Фильтры + список задач -->
+    <template v-else>
 
-        <!-- Название -->
-        <h3 class="font-semibold text-gray-800 leading-snug">{{ task.title }}</h3>
+      <!-- Панель фильтров -->
+      <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-4 flex flex-col gap-3">
+        <div class="flex flex-col sm:flex-row flex-wrap gap-3 items-end">
 
-        <!-- Описание -->
-        <p class="text-sm text-gray-500 line-clamp-2">{{ task.description }}</p>
-
-        <!-- Бюджет -->
-        <p class="text-sm font-semibold text-[#01978E]">{{ formatBudget(task.budget) }}</p>
-
-        <!-- ПОДРЯДЧИК: Принять — только если статус CREATED и задача открытая или назначена на него -->
-        <div
-          v-if="isContractor && task.status === 'CREATED' && (task.assignedToId === null || task.assignedToId === currentUserId)"
-          @click.stop
-          class="border-t border-gray-100 pt-3 flex flex-col gap-1"
-        >
-          <BaseButton
-            :disabled="acceptingId === task.id"
-            @click="handleAccept(task.id)"
-            class="w-full"
-          >
-            {{ acceptingId === task.id ? 'Принимаем...' : 'Принять' }}
-          </BaseButton>
-          <p v-if="acceptErrorId === task.id" class="text-xs text-red-500 text-center">
-            Не удалось принять. Задача уже занята или нет прав.
-          </p>
-        </div>
-
-        <!-- ПОДРЯДЧИК: Сдать работу — только если задача назначена на него и статус ACCEPTED/IN_PROGRESS -->
-        <div
-          v-if="isContractor && (task.status === 'ACCEPTED' || task.status === 'IN_PROGRESS') && task.assignedToId === currentUserId"
-          @click.stop
-          class="border-t border-gray-100 pt-3 flex flex-col gap-2"
-        >
-          <!-- Кнопка «Сдать работу» — пока форма не открыта -->
-          <BaseButton
-            v-if="submitFormTaskId !== task.id"
-            @click="openSubmitForm(task.id)"
-            class="w-full"
-          >
-            Сдать работу
-          </BaseButton>
-
-          <!-- Форма сдачи работы -->
-          <template v-else>
-            <textarea
-              v-model="submitContent"
-              placeholder="Опишите выполненную работу"
-              rows="3"
-              class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#01978E] focus:border-transparent resize-none"
-            />
+          <!-- Поиск -->
+          <div class="flex flex-col gap-1 flex-1 min-w-[160px]">
+            <label class="text-xs font-medium text-gray-500">Поиск</label>
             <input
-              type="text"
-              v-model="submitAttachments"
-              placeholder="Ссылка на результат (необязательно)"
-              class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#01978E] focus:border-transparent"
+              v-model="filters.search"
+              placeholder="Поиск по названию..."
+              class="border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#01978E] focus:border-transparent"
             />
-            <p v-if="submitWork.isError.value" class="text-xs text-red-500">
-              Не удалось отправить. Проверьте данные.
-            </p>
+          </div>
+
+          <!-- Статус -->
+          <div class="flex flex-col gap-1">
+            <label class="text-xs font-medium text-gray-500">Статус</label>
+            <select
+              v-model="filters.status"
+              class="border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#01978E] focus:border-transparent bg-white"
+            >
+              <option value="">Все статусы</option>
+              <option value="CREATED">Создана</option>
+              <option value="ACCEPTED">Принята</option>
+              <option value="SUBMITTED">На проверке</option>
+              <option value="APPROVED">Одобрена</option>
+              <option value="COMPLETED">Завершена</option>
+            </select>
+          </div>
+
+          <!-- Бюджет -->
+          <div class="flex flex-col gap-1">
+            <label class="text-xs font-medium text-gray-500">Бюджет, ₸</label>
             <div class="flex gap-2">
-              <BaseButton
-                :disabled="submitWork.isPending.value || !submitContent.trim()"
-                @click="handleSubmitWork(task.id)"
-                class="flex-1"
-              >
-                {{ submitWork.isPending.value ? 'Отправляем...' : 'Отправить' }}
-              </BaseButton>
-              <button
-                type="button"
-                @click="closeSubmitForm"
-                class="px-4 py-2 text-sm text-gray-500 hover:text-gray-700 transition-colors"
-              >
-                Отмена
-              </button>
+              <input
+                type="number"
+                v-model.number="filters.budgetMin"
+                placeholder="от"
+                class="border border-gray-200 rounded-lg px-3 py-2 text-sm w-24 focus:outline-none focus:ring-2 focus:ring-[#01978E] focus:border-transparent"
+              />
+              <input
+                type="number"
+                v-model.number="filters.budgetMax"
+                placeholder="до"
+                class="border border-gray-200 rounded-lg px-3 py-2 text-sm w-24 focus:outline-none focus:ring-2 focus:ring-[#01978E] focus:border-transparent"
+              />
             </div>
-          </template>
-        </div>
+          </div>
 
-        <!-- КОМПАНИЯ: Одобрить — только если статус SUBMITTED или REVIEW -->
-        <div
-          v-if="isCompany && (task.status === 'SUBMITTED' || task.status === 'REVIEW')"
-          @click.stop
-          class="border-t border-gray-100 pt-3 flex flex-col gap-1"
-        >
-          <BaseButton
-            :disabled="approvingId === task.id"
-            @click="handleApprove(task.id)"
-            class="w-full"
+          <!-- Сброс -->
+          <button
+            v-if="hasActiveFilters"
+            @click="resetFilters"
+            class="self-end px-4 py-2 text-sm text-gray-500 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors"
           >
-            {{ approvingId === task.id ? 'Одобряем...' : 'Одобрить' }}
-          </BaseButton>
-          <p v-if="approveErrorId === task.id" class="text-xs text-red-500 text-center">
-            Нет прав или задача в неверном статусе.
-          </p>
+            Сбросить фильтры
+          </button>
         </div>
 
-        <!-- КОМПАНИЯ: Выплатить — только статус APPROVED -->
-        <div
-          v-if="isCompany && task.status === 'APPROVED'"
-          @click.stop
-          class="border-t border-gray-100 pt-3"
-        >
-          <BaseButton
-            :disabled="payingId === task.id"
-            @click="handlePay(task.id)"
-            class="w-full"
+        <!-- Активные фильтры-бейджи -->
+        <div v-if="hasActiveFilters" class="flex flex-wrap gap-2">
+          <span
+            v-if="filters.status"
+            class="inline-flex items-center gap-1.5 text-xs px-2.5 py-1 rounded-full bg-[#01978E]/10 text-[#01978E] font-medium"
           >
-            {{ payingId === task.id ? 'Инициируем...' : 'Выплатить' }}
-          </BaseButton>
+            Статус: {{ statusConfig(filters.status as TaskStatus).label }}
+            <button @click="filters.status = ''" class="leading-none hover:opacity-70">×</button>
+          </span>
+          <span
+            v-if="filters.search"
+            class="inline-flex items-center gap-1.5 text-xs px-2.5 py-1 rounded-full bg-[#01978E]/10 text-[#01978E] font-medium"
+          >
+            Поиск: {{ filters.search }}
+            <button @click="filters.search = ''" class="leading-none hover:opacity-70">×</button>
+          </span>
+          <span
+            v-if="filters.budgetMin !== null"
+            class="inline-flex items-center gap-1.5 text-xs px-2.5 py-1 rounded-full bg-[#01978E]/10 text-[#01978E] font-medium"
+          >
+            От: {{ (filters.budgetMin as number).toLocaleString('ru-RU') }} ₸
+            <button @click="filters.budgetMin = null" class="leading-none hover:opacity-70">×</button>
+          </span>
+          <span
+            v-if="filters.budgetMax !== null"
+            class="inline-flex items-center gap-1.5 text-xs px-2.5 py-1 rounded-full bg-[#01978E]/10 text-[#01978E] font-medium"
+          >
+            До: {{ (filters.budgetMax as number).toLocaleString('ru-RU') }} ₸
+            <button @click="filters.budgetMax = null" class="leading-none hover:opacity-70">×</button>
+          </span>
         </div>
 
+        <!-- Счётчик -->
+        <p class="text-xs text-gray-400">
+          Показано: {{ filteredTasks.length }} из {{ tasks?.length }}
+        </p>
       </div>
-    </div>
+
+      <!-- Нет результатов после фильтрации -->
+      <div
+        v-if="filteredTasks.length === 0"
+        class="bg-white rounded-xl shadow-sm border border-gray-100 p-10 text-center text-gray-400"
+      >
+        Ни одна задача не соответствует выбранным фильтрам
+      </div>
+
+      <!-- Сетка задач -->
+      <div v-else class="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div
+          v-for="task in filteredTasks"
+          :key="task.id"
+          @click="router.push(`/tasks/${task.id}`)"
+          class="bg-white rounded-xl shadow-sm border border-gray-100 p-5 flex flex-col gap-3 cursor-pointer hover:border-gray-200 transition-colors"
+        >
+          <!-- Статус + дедлайн -->
+          <div class="flex items-center justify-between">
+            <span :class="['text-xs font-medium px-2.5 py-1 rounded-full', statusConfig(task.status).cls]">
+              {{ statusConfig(task.status).label }}
+            </span>
+            <span v-if="task.deadline" class="text-xs text-gray-400">
+              до {{ formatDeadline(task.deadline) }}
+            </span>
+          </div>
+
+          <!-- Название -->
+          <h3 class="font-semibold text-gray-800 leading-snug">{{ task.title }}</h3>
+
+          <!-- Описание -->
+          <p class="text-sm text-gray-500 line-clamp-2">{{ task.description }}</p>
+
+          <!-- Бюджет -->
+          <p class="text-sm font-semibold text-[#01978E]">{{ formatBudget(task.budget) }}</p>
+
+          <!-- ПОДРЯДЧИК: Принять -->
+          <div
+            v-if="isContractor && task.status === 'CREATED' && (task.assignedToId === null || task.assignedToId === currentUserId)"
+            @click.stop
+            class="border-t border-gray-100 pt-3 flex flex-col gap-1"
+          >
+            <BaseButton
+              :disabled="acceptingId === task.id"
+              @click="handleAccept(task.id)"
+              class="w-full"
+            >
+              {{ acceptingId === task.id ? 'Принимаем...' : 'Принять' }}
+            </BaseButton>
+            <p v-if="acceptErrorId === task.id" class="text-xs text-red-500 text-center">
+              Не удалось принять. Задача уже занята или нет прав.
+            </p>
+          </div>
+
+          <!-- ПОДРЯДЧИК: Сдать работу -->
+          <div
+            v-if="isContractor && (task.status === 'ACCEPTED' || task.status === 'IN_PROGRESS') && task.assignedToId === currentUserId"
+            @click.stop
+            class="border-t border-gray-100 pt-3 flex flex-col gap-2"
+          >
+            <BaseButton
+              v-if="submitFormTaskId !== task.id"
+              @click="openSubmitForm(task.id)"
+              class="w-full"
+            >
+              Сдать работу
+            </BaseButton>
+
+            <template v-else>
+              <textarea
+                v-model="submitContent"
+                placeholder="Опишите выполненную работу"
+                rows="3"
+                class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#01978E] focus:border-transparent resize-none"
+              />
+              <input
+                type="text"
+                v-model="submitAttachments"
+                placeholder="Ссылка на результат (необязательно)"
+                class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#01978E] focus:border-transparent"
+              />
+              <p v-if="submitWork.isError.value" class="text-xs text-red-500">
+                Не удалось отправить. Проверьте данные.
+              </p>
+              <div class="flex gap-2">
+                <BaseButton
+                  :disabled="submitWork.isPending.value || !submitContent.trim()"
+                  @click="handleSubmitWork(task.id)"
+                  class="flex-1"
+                >
+                  {{ submitWork.isPending.value ? 'Отправляем...' : 'Отправить' }}
+                </BaseButton>
+                <button
+                  type="button"
+                  @click="closeSubmitForm"
+                  class="px-4 py-2 text-sm text-gray-500 hover:text-gray-700 transition-colors"
+                >
+                  Отмена
+                </button>
+              </div>
+            </template>
+          </div>
+
+          <!-- КОМПАНИЯ: Одобрить -->
+          <div
+            v-if="isCompany && (task.status === 'SUBMITTED' || task.status === 'REVIEW')"
+            @click.stop
+            class="border-t border-gray-100 pt-3 flex flex-col gap-1"
+          >
+            <BaseButton
+              :disabled="approvingId === task.id"
+              @click="handleApprove(task.id)"
+              class="w-full"
+            >
+              {{ approvingId === task.id ? 'Одобряем...' : 'Одобрить' }}
+            </BaseButton>
+            <p v-if="approveErrorId === task.id" class="text-xs text-red-500 text-center">
+              Нет прав или задача в неверном статусе.
+            </p>
+          </div>
+
+          <!-- КОМПАНИЯ: Выплатить -->
+          <div
+            v-if="isCompany && task.status === 'APPROVED'"
+            @click.stop
+            class="border-t border-gray-100 pt-3"
+          >
+            <BaseButton
+              :disabled="payingId === task.id"
+              @click="handlePay(task.id)"
+              class="w-full"
+            >
+              {{ payingId === task.id ? 'Инициируем...' : 'Выплатить' }}
+            </BaseButton>
+          </div>
+
+        </div>
+      </div>
+
+    </template>
 
   </div>
 </template>

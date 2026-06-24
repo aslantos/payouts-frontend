@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, computed } from 'vue'
+import { ref, computed, reactive } from 'vue'
 import { useAuthStore } from '@/features/auth/model/authStore'
 import { useContracts } from '@/features/contracts/model/useContracts'
 import { useContractDetail } from '@/features/contracts/model/useContractDetail'
@@ -45,6 +45,28 @@ function formatDate(date: string | null): string {
     day: 'numeric', month: 'short', year: 'numeric',
   })
 }
+
+// --- Фильтры ---
+const filters = reactive({
+  status: '' as ContractStatus | '',
+  search: '',
+})
+
+const filteredContracts = computed(() =>
+  contracts.value?.filter(c => {
+    if (filters.status && c.status !== filters.status) return false
+    if (filters.search && !c.contractNumber.toLowerCase().includes(filters.search.toLowerCase())) return false
+    return true
+  }) ?? []
+)
+
+const hasActiveFilters = computed(() =>
+  filters.status !== '' || filters.search !== ''
+)
+
+function resetFilters() {
+  Object.assign(filters, { status: '', search: '' })
+}
 </script>
 
 <template>
@@ -79,37 +101,115 @@ function formatDate(date: string | null): string {
       <p class="text-base">Договоров пока нет</p>
     </div>
 
-    <!-- Список договоров -->
-    <div v-else class="grid grid-cols-1 md:grid-cols-2 gap-4">
-      <div
-        v-for="contract in contracts"
-        :key="contract.id"
-        @click="selectedId = selectedId === contract.id ? null : contract.id"
-        :class="[
-          'bg-white rounded-xl shadow-sm border p-5 flex flex-col gap-3 cursor-pointer transition-all',
-          selectedId === contract.id
-            ? 'border-[#01978E] ring-2 ring-[#01978E]/20'
-            : 'border-gray-100 hover:border-gray-200',
-        ]"
-      >
-        <!-- Статус + номер -->
-        <div class="flex items-center justify-between">
-          <span :class="['text-xs font-medium px-2.5 py-1 rounded-full', statusConfig(contract.status).cls]">
-            {{ statusConfig(contract.status).label }}
-          </span>
-          <span class="text-xs text-gray-400 font-mono">{{ contract.contractNumber }}</span>
+    <!-- Фильтры + список договоров -->
+    <template v-else>
+
+      <!-- Панель фильтров -->
+      <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-4 flex flex-col gap-3">
+        <div class="flex flex-col sm:flex-row flex-wrap gap-3 items-end">
+
+          <!-- Поиск по номеру -->
+          <div class="flex flex-col gap-1 flex-1 min-w-[160px]">
+            <label class="text-xs font-medium text-gray-500">Номер договора</label>
+            <input
+              v-model="filters.search"
+              placeholder="Поиск по номеру..."
+              class="border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#01978E] focus:border-transparent"
+            />
+          </div>
+
+          <!-- Статус -->
+          <div class="flex flex-col gap-1">
+            <label class="text-xs font-medium text-gray-500">Статус</label>
+            <select
+              v-model="filters.status"
+              class="border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#01978E] focus:border-transparent bg-white"
+            >
+              <option value="">Все статусы</option>
+              <option value="DRAFT">Черновик</option>
+              <option value="SENT">Отправлен</option>
+              <option value="SIGNED">Подписан</option>
+              <option value="ACTIVE">Активен</option>
+              <option value="CLOSED">Закрыт</option>
+              <option value="CANCELLED">Отменён</option>
+            </select>
+          </div>
+
+          <!-- Сброс -->
+          <button
+            v-if="hasActiveFilters"
+            @click="resetFilters"
+            class="self-end px-4 py-2 text-sm text-gray-500 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors"
+          >
+            Сбросить фильтры
+          </button>
         </div>
 
-        <!-- Предмет -->
-        <h3 class="font-semibold text-gray-800 leading-snug line-clamp-2">{{ contract.subject }}</h3>
+        <!-- Активные фильтры-бейджи -->
+        <div v-if="hasActiveFilters" class="flex flex-wrap gap-2">
+          <span
+            v-if="filters.status"
+            class="inline-flex items-center gap-1.5 text-xs px-2.5 py-1 rounded-full bg-[#01978E]/10 text-[#01978E] font-medium"
+          >
+            Статус: {{ statusConfig(filters.status as ContractStatus).label }}
+            <button @click="filters.status = ''" class="leading-none hover:opacity-70">×</button>
+          </span>
+          <span
+            v-if="filters.search"
+            class="inline-flex items-center gap-1.5 text-xs px-2.5 py-1 rounded-full bg-[#01978E]/10 text-[#01978E] font-medium"
+          >
+            Номер: {{ filters.search }}
+            <button @click="filters.search = ''" class="leading-none hover:opacity-70">×</button>
+          </span>
+        </div>
 
-        <!-- Сумма + дата -->
-        <div class="flex items-center justify-between mt-auto">
-          <p class="text-sm font-semibold text-[#01978E]">{{ formatAmount(contract.amount) }}</p>
-          <p class="text-xs text-gray-400">{{ formatDate(contract.createdAt) }}</p>
+        <!-- Счётчик -->
+        <p class="text-xs text-gray-400">
+          Показано: {{ filteredContracts.length }} из {{ contracts?.length }}
+        </p>
+      </div>
+
+      <!-- Нет результатов после фильтрации -->
+      <div
+        v-if="filteredContracts.length === 0"
+        class="bg-white rounded-xl shadow-sm border border-gray-100 p-10 text-center text-gray-400"
+      >
+        Ни один договор не соответствует выбранным фильтрам
+      </div>
+
+      <!-- Сетка договоров -->
+      <div v-else class="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div
+          v-for="contract in filteredContracts"
+          :key="contract.id"
+          @click="selectedId = selectedId === contract.id ? null : contract.id"
+          :class="[
+            'bg-white rounded-xl shadow-sm border p-5 flex flex-col gap-3 cursor-pointer transition-all',
+            selectedId === contract.id
+              ? 'border-[#01978E] ring-2 ring-[#01978E]/20'
+              : 'border-gray-100 hover:border-gray-200',
+          ]"
+        >
+          <!-- Статус + номер -->
+          <div class="flex items-center justify-between">
+            <span :class="['text-xs font-medium px-2.5 py-1 rounded-full', statusConfig(contract.status).cls]">
+              {{ statusConfig(contract.status).label }}
+            </span>
+            <span class="text-xs text-gray-400 font-mono">{{ contract.contractNumber }}</span>
+          </div>
+
+          <!-- Предмет -->
+          <h3 class="font-semibold text-gray-800 leading-snug line-clamp-2">{{ contract.subject }}</h3>
+
+          <!-- Сумма + дата -->
+          <div class="flex items-center justify-between mt-auto">
+            <p class="text-sm font-semibold text-[#01978E]">{{ formatAmount(contract.amount) }}</p>
+            <p class="text-xs text-gray-400">{{ formatDate(contract.createdAt) }}</p>
+          </div>
         </div>
       </div>
-    </div>
+
+    </template>
 
     <!-- Детали выбранного договора -->
     <div

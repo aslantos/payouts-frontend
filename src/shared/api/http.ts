@@ -21,8 +21,6 @@ http.interceptors.response.use(
     if (error.response?.status === 401 && !isAuthMutation) {
       localStorage.removeItem('access_token')
       localStorage.removeItem('auth_user')
-      // window.location вместо router.push — избегаем circular import (http → router → ... → http)
-      // Полная перезагрузка при истёкшей сессии — сбрасывает все состояния чисто
       window.location.href = '/login'
     }
     return Promise.reject(error)
